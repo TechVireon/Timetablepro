@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | TimetablePro</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="dashboard-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span>TimetablePro</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="#">My Timetables</a>
+        <a href="#">Settings</a>
+        <a href="#">Logout</a>
+      </nav>
+    </aside>
+
+    <div class="dashboard-main">
+      <header class="dashboard-header">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+        <div>
+          <p class="eyebrow">Administrator dashboard</p>
+          <h1>Welcome!</h1>
+        </div>
+      </header>
+
+      <section class="dashboard-content">
+        <div class="dashboard-card">
+          <h2>Create your first timetable</h2>
+          <p>Use the menu to add classes, teachers, rooms, and start scheduling with the AI assistant.</p>
+          <a href="#" class="button button-primary">Create timetable</a>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
