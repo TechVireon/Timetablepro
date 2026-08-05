@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | TimetablePro</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="site-header compact-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">TimetablePro</a>
+      <nav class="top-nav" id="topNavLogin">
+        <a href="signup.html" class="button button-secondary">Sign Up</a>
+      </nav>
+      <button class="menu-toggle" id="menuToggleLogin" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="auth-page">
+    <div class="container auth-grid login-grid">
+      <div class="auth-card">
+        <div class="auth-copy">
+          <p class="eyebrow">Welcome back</p>
+          <h1>Login to your account</h1>
+          <p>Access your timetable workspace and continue building schedules with AI support.</p>
+        </div>
+        <form class="form-card">
+          <label>
+            <span>Email</span>
+            <input type="email" placeholder="you@example.com" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" placeholder="Enter your password" required />
+          </label>
+          <div class="form-row justify-end">
+            <a href="#" class="link-small">Forgot password?</a>
+          </div>
+          <button type="submit" class="button button-primary">Login</button>
+        </form>
+        <p class="auth-footer">Don't have an account? <a href="signup.html">Sign up</a></p>
+      </div>
+
+      <div class="auth-illustration card-panel">
+        <div class="illustration-icon">🗓️</div>
+        <h2>Secure access to your timetables</h2>
+        <p>Log in and manage your school schedule in a clean dashboard built for administrators and staff.</p>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  const SUPABASE_URL = "https://qhpvcxrktcfbafykzfzr.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up | TimetablePro</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="site-header compact-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">TimetablePro</a>
+      <nav class="top-nav" id="topNavSignup">
+        <a href="login.html">Login</a>
+      </nav>
+      <button class="menu-toggle" id="menuToggleSignup" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="auth-page">
+    <div class="container auth-grid">
+      <div class="auth-card">
+        <div class="auth-copy">
+          <p class="eyebrow">Create an account</p>
+          <h1>Sign up for TimetablePro</h1>
+          <p>Set up your school or college account and start generating timetables with AI.</p>
+        </div>
+        <form class="form-card">
+          <label>
+            <span>School / College name</span>
+            <input type="text" id="school-name" placeholder="Example High School" required />
+          </label>
+          <label>
+            <span>Full name</span>
+            <input type="text" id="full-name" placeholder="Your name" required />
+          </label>
+          <label>
+            <span>Email</span>
+            <input type="email" id="signup-email" placeholder="you@example.com" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input type="password" id="signup-password" placeholder="Create a password" required />
+          </label>
+          <label>
+            <span>Confirm password</span>
+            <input type="password" id="confirm-password" placeholder="Repeat your password" required />
+          </label>
+          <button type="submit" class="button button-primary">Create account</button>
+        </form>
+        <p class="auth-footer">Already have an account? <a href="login.html">Login</a></p>
+      </div>
+
+      <div class="auth-illustration card-panel">
+        <div class="illustration-icon">📘</div>
+        <h2>AI timetable setup made easy</h2>
+        <p>Enter your school details and let the platform deliver a polished timetable workflow designed for administrators and teachers.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://qhpvcxrktcfbafykzfzr.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.querySelector(".form-card").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("signup-email").value;
+      const password = document.getElementById("signup-password").value;
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        alert("Signup failed: " + error.message);
+      } else {
+        alert("Signup successful! Please check your email to confirm.");
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>
