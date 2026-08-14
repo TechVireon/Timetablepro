@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign Up | TimetablePro</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="script.js" defer></script>
 </head>
 <body>
   <header class="site-header compact-header">
@@ -67,7 +68,7 @@
   <script>
     const SUPABASE_URL = "https://qhpvcxrktcfbafykzfzr.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClients = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.querySelector(".form-card").addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -75,7 +76,7 @@
       const email = document.getElementById("signup-email").value;
       const password = document.getElementById("signup-password").value;
 
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabaseClients.auth.signUp({ email, password });
 
       if (error) {
         alert("Signup failed: " + error.message);
