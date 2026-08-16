@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Timetable | TimetablePro</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">TimetablePro</div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="create-timetable.html" class="active">Create Timetable</a>
+        <a href="#">Settings</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </aside>
+
+    <main class="dashboard-main">
+      <h1>Create Timetable</h1>
+
+      <div class="card-panel">
+        <label>
+          <span>Days per week</span>
+          <input type="number" id="days" value="5" min="1" max="6" />
+        </label>
+        <label>
+          <span>Periods per day</span>
+          <input type="number" id="periodsPerDay" value="7" min="1" max="10" />
+        </label>
+      </div>
+
+      <div id="classesContainer"></div>
+
+      <button class="button button-secondary" id="addClassBtn">+ Add Class</button>
+      <button class="button button-primary" id="generateBtn">Generate Timetable</button>
+
+      <div id="resultArea"></div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://qhpvcxrktcfbafykzfzr.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // IMPORTANT: Link Of Backend
+    const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
+
+    async function checkLogin() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) window.location.href = "login.html";
+    }
+    checkLogin();
+
+    document.getElementById("logoutBtn").addEventListener("click", async function (e) {
+      e.preventDefault();
+      await supabaseClient.auth.signOut();
+      window.location.href = "login.html";
+    });
+
+    let classCount = 0;
+
+    function addClass() {
+      classCount++;
+      const classId = `class-${classCount}`;
+      const div = document.createElement("div");
+      div.className = "card-panel";
+      div.id = classId;
+      div.innerHTML = `
+        <label>
+          <span>Class name</span>
+          <input type="text" class="className" placeholder="e.g. 9th A" />
+        </label>
+        <div class="subjectsContainer"></div>
+        <button type="button" class="button button-secondary addSubjectBtn">+ Add Subject</button>
+      `;
+      document.getElementById("classesContainer").appendChild(div);
+
+      div.querySelector(".addSubjectBtn").addEventListener("click", function () {
+        addSubject(div.querySelector(".subjectsContainer"));
+      });
+
+      addSubject(div.querySelector(".subjectsContainer"));
+    }
+
+    function addSubject(container) {
+      const row = document.createElement("div");
+      row.className = "subject-row";
+      row.innerHTML = `
+        <input type="text" class="subjectName" placeholder="Subject (e.g. Math)" />
+        <input type="text" class="teacherName" placeholder="Teacher name" />
+        <input type="number" class="periodsWeek" placeholder="Periods/week" min="1" value="5" />
+      `;
+      container.appendChild(row);
+    }
+
+    document.getElementById("addClassBtn").addEventListener("click", addClass);
+    addClass(); // start with one class by default
+
+    document.getElementById("generateBtn").addEventListener("click", async function () {
+      const days = parseInt(document.getElementById("days").value);
+      const periodsPerDay = parseInt(document.getElementById("periodsPerDay").value);
+
+      const classes = {};
+      document.querySelectorAll("#classesContainer > .card-panel").forEach(function (classDiv) {
+        const className = classDiv.querySelector(".className").value.trim();
+        if (!className) return;
+
+        const subjects = [];
+        classDiv.querySelectorAll(".subject-row").forEach(function (row) {
+          const subject = row.querySelector(".subjectName").value.trim();
+          const teacher = row.querySelector(".teacherName").value.trim();
+          const periods = parseInt(row.querySelector(".periodsWeek").value);
+          if (subject && teacher && periods) {
+            subjects.push({ subject, teacher, periods_per_week: periods });
+          }
+        });
+        if (subjects.length) classes[className] = subjects;
+      });
+
+      const resultArea = document.getElementById("resultArea");
+      resultArea.innerHTML = "<p>Generating timetable...</p>";
+
+      try {
+        const response = await fetch(`${BACKEND_URL}/generate-timetable`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          resultArea.innerHTML = `<p style="color:red">${data.detail || "Something went wrong."}</p>`;
+          return;
+        }
+
+        renderTimetables(data.timetable, days, periodsPerDay);
+      } catch (err) {
+        resultArea.innerHTML = `<p style="color:red">Could not reach the server. Check your backend link.</p>`;
+      }
+    });
+
+    function renderTimetables(timetable, days, periodsPerDay) {
+      const resultArea = document.getElementById("resultArea");
+      resultArea.innerHTML = "";
+
+      Object.keys(timetable).forEach(function (className) {
+        const section = document.createElement("div");
+        section.className = "card-panel";
+        let html = `<h3>${className}</h3><table class="timetable-table"><tr><th>Period</th>`;
+
+        for (let d = 0; d < days; d++) html += `<th>Day ${d + 1}</th>`;
+        html += `</tr>`;
+
+        for (let p = 0; p < periodsPerDay; p++) {
+          html += `<tr><td>Period ${p + 1}</td>`;
+          for (let d = 0; d < days; d++) {
+            const cell = timetable[className][d] && timetable[className][d][p];
+            html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
+          }
+          html += `</tr>`;
+        }
+        html += `</table>`;
+        html += `<button class="button button-primary downloadBtn" data-class="${className}">Download PDF</button>`;
+        section.innerHTML = html;
+        resultArea.appendChild(section);
+      });
+
+      document.querySelectorAll(".downloadBtn").forEach(function (btn) {
+        btn.addEventListener("click", async function () {
+          const className = btn.getAttribute("data-class");
+          const days = parseInt(document.getElementById("days").value);
+          const periodsPerDay = parseInt(document.getElementById("periodsPerDay").value);
+          const classes = {};
+          document.querySelectorAll("#classesContainer > .card-panel").forEach(function (classDiv) {
+            const cName = classDiv.querySelector(".className").value.trim();
+            const subjects = [];
+            classDiv.querySelectorAll(".subject-row").forEach(function (row) {
+              subjects.push({
+                subject: row.querySelector(".subjectName").value.trim(),
+                teacher: row.querySelector(".teacherName").value.trim(),
+                periods_per_week: parseInt(row.querySelector(".periodsWeek").value)
+              });
+            });
+            classes[cName] = subjects;
+          });
+
+          const response = await fetch(`${BACKEND_URL}/download-pdf/${className}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes })
+          });
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${className}_timetable.pdf`;
+          a.click();
+        });
+      });
+    }
+  </script>
+</body>
+</html>
