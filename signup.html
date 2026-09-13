@@ -76,7 +76,19 @@
       const email = document.getElementById("signup-email").value;
       const password = document.getElementById("signup-password").value;
 
-      const { data, error } = await supabaseClients.auth.signUp({ email, password });
+            const schoolName = document.getElementById("school-name").value;
+      const fullName = document.getElementById("full-name").value;
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            school_name: schoolName,
+            full_name: fullName
+          }
+        }
+      });
 
       if (error) {
         alert("Signup failed: " + error.message);
