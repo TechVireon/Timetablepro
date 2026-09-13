@@ -19,7 +19,7 @@
     </aside>
 
     <main class="dashboard-main">
-      <h1>Welcome!</h1>
+      <h1 id="welcomeHeading">Welcome!</h1>
       <p>Create your first timetable to get started.</p>
       <a href="create-timetable.html" class="button button-primary">+ Create Timetable</a>
     </main>
@@ -32,10 +32,16 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Check if user is actually logged in — if not, send them back to login
-    async function checkLogin() {
+        async function checkLogin() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         window.location.href = "login.html";
+        return;
+      }
+
+      const schoolName = session.user.user_metadata?.school_name;
+      if (schoolName) {
+        document.getElementById("welcomeHeading").textContent = "Welcome, " + schoolName + "!";
       }
     }
     checkLogin();
