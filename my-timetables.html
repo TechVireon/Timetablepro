@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Timetables | TimetablePro</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">TimetablePro</div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="create-timetable.html">Create Timetable</a>
+        <a href="my-timetables.html" class="active">My Timetables</a>
+        <a href="#">Settings</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </aside>
+
+    <main class="dashboard-main">
+      <h1>My Timetables</h1>
+      <div id="listArea"><p>Loading...</p></div>
+      <div id="viewArea"></div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://qhpvcxrktcfbafykzfzr.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById("logoutBtn").addEventListener("click", async function (e) {
+      e.preventDefault();
+      await supabaseClient.auth.signOut();
+      window.location.href = "login.html";
+    });
+
+    async function loadTimetables() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const { data, error } = await supabaseClient
+        .from("timetables")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+
+      const listArea = document.getElementById("listArea");
+
+      if (error) {
+        listArea.innerHTML = `<p style="color:red">Could not load timetables: ${error.message}</p>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        listArea.innerHTML = `<p>No timetables saved yet. <a href="create-timetable.html">Create one</a>.</p>`;
+        return;
+      }
+
+      listArea.innerHTML = "";
+      data.forEach(function (row) {
+        const card = document.createElement("div");
+        card.className = "card-panel";
+        const date = new Date(row.created_at).toLocaleDateString();
+        card.innerHTML = `
+          <h3>${row.class_name}</h3>
+          <p>Saved on ${date}</p>
+          <button class="button button-primary viewBtn">View</button>
+        `;
+        card.querySelector(".viewBtn").addEventListener("click", function () {
+          renderSavedTimetable(row);
+        });
+        listArea.appendChild(card);
+      });
+    }
+
+    function renderSavedTimetable(row) {
+      const viewArea = document.getElementById("viewArea");
+      const days = row.days || 5;
+      const periodsPerDay = row.periods_per_day || 7;
+      const schedule = row.data;
+
+      let html = `<div class="card-panel"><h3>${row.class_name}</h3><table class="timetable-table"><tr><th>Period</th>`;
+      for (let d = 0; d < days; d++) html += `<th>Day ${d + 1}</th>`;
+      html += `</tr>`;
+
+      for (let p = 0; p < periodsPerDay; p++) {
+        html += `<tr><td>Period ${p + 1}</td>`;
+        for (let d = 0; d < days; d++) {
+          const cell = schedule[d] && schedule[d][p];
+          html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
+        }
+        html += `</tr>`;
+      }
+      html += `</table></div>`;
+      viewArea.innerHTML = html;
+      viewArea.scrollIntoView({ behavior: "smooth" });
+    }
+
+    loadTimetables();
+  </script>
+</body>
+</html>
