@@ -145,19 +145,27 @@
       }
     });
 
-    async function saveTimetables(timetableData) {
+        async function saveTimetables(timetableData) {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.log("No session found — user not logged in?");
+        return;
+      }
 
       for (const className in timetableData) {
-        await supabaseClient.from("timetables").insert({
+        const { error } = await supabaseClient.from("timetables").insert({
           user_id: session.user.id,
           class_name: className,
           data: timetableData[className]
         });
+
+        if (error) {
+          console.log("SAVE ERROR:", error.message);
+        } else {
+          console.log("Saved successfully:", className);
+        }
       }
     }
-
     function renderTimetables(timetable, days, periodsPerDay) {
       const resultArea = document.getElementById("resultArea");
       resultArea.innerHTML = "";
