@@ -101,7 +101,7 @@
     document.getElementById("addClassBtn").addEventListener("click", addClass);
     addClass(); // start with one class by default
 
-    document.getElementById("generateBtn").addEventListener("click", async function () {
+        document.getElementById("generateBtn").addEventListener("click", async function () {
       const days = parseInt(document.getElementById("days").value);
       const periodsPerDay = parseInt(document.getElementById("periodsPerDay").value);
 
@@ -140,15 +140,85 @@
         }
 
         renderTimetables(data.timetable, days, periodsPerDay);
+        await saveTimetables(data.timetable);
       } catch (err) {
         resultArea.innerHTML = `<p style="color:red">Could not reach the server. Check your backend link.</p>`;
       }
     });
 
+    async function saveTimetables(timetableData) {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) return;
+
+      for (const className in timetableData) {
+        await supabaseClient.from("timetables").insert({
+          user_id: session.user.id,
+          class_name: className,
+          data: timetableData[className]
+        });
+      }
+    }
+
     function renderTimetables(timetable, days, periodsPerDay) {
       const resultArea = document.getElementById("resultArea");
       resultArea.innerHTML = "";
 
+      Object.keys(timetable).forEach(function (className) {
+        const section = document.createElement("div");
+        section.className = "card-panel";
+        let html = `<h3>${className}</h3><table class="timetable-table"><tr><th>Period</th>`;
+
+        for (let d = 0; d < days; d++) html += `<th>Day ${d + 1}</th>`;
+        html += `</tr>`;
+
+        for (let p = 0; p < periodsPerDay; p++) {
+          html += `<tr><td>Period ${p + 1}</td>`;
+          for (let d = 0; d < days; d++) {
+            const cell = timetable[className][d] && timetable[className][d][p];
+            html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
+          }
+          html += `</tr>`;
+        }
+        html += `</table>`;
+        html += `<button class="button button-primary downloadBtn" data-class="${className}">Download PDF</button>`;
+        section.innerHTML = html;
+        resultArea.appendChild(section);
+      });
+
+      document.querySelectorAll(".downloadBtn").forEach(function (btn) {
+        btn.addEventListener("click", async function () {
+          const className = btn.getAttribute("data-class");
+          const days = parseInt(document.getElementById("days").value);
+          const periodsPerDay = parseInt(document.getElementById("periodsPerDay").value);
+          const classes = {};
+          document.querySelectorAll("#classesContainer > .card-panel").forEach(function (classDiv) {
+            const cName = classDiv.querySelector(".className").value.trim();
+            const subjects = [];
+            classDiv.querySelectorAll(".subject-row").forEach(function (row) {
+              subjects.push({
+                subject: row.querySelector(".subjectName").value.trim(),
+                teacher: row.querySelector(".teacherName").value.trim(),
+                periods_per_week: parseInt(row.querySelector(".periodsWeek").value)
+              });
+            });
+            classes[cName] = subjects;
+          });
+
+          const response = await fetch(`${BACKEND_URL}/download-pdf/${className}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes })
+          });
+
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${className}_timetable.pdf`;
+          a.click();
+        });
+      });
+    }
       Object.keys(timetable).forEach(function (className) {
         const section = document.createElement("div");
         section.className = "card-panel";
