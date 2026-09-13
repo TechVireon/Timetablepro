@@ -138,14 +138,14 @@
           return;
         }
 
-        renderTimetables(data.timetable, days, periodsPerDay);
-        await saveTimetables(data.timetable);
+                renderTimetables(data.timetable, days, periodsPerDay);
+        await saveTimetables(data.timetable, days, periodsPerDay);
       } catch (err) {
         resultArea.innerHTML = `<p style="color:red">Could not reach the server. Check your backend link.</p>`;
       }
     });
 
-        async function saveTimetables(timetableData) {
+        async function saveTimetables(timetableData, days, periodsPerDay) {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         console.log("No session found — user not logged in?");
