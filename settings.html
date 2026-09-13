@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings | TimetablePro</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">TimetablePro</div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="create-timetable.html">Create Timetable</a>
+        <a href="my-timetables.html">My Timetables</a>
+        <a href="settings.html" class="active">Settings</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </nav>
+    </aside>
+
+    <main class="dashboard-main">
+      <h1>Settings</h1>
+
+      <div class="card-panel" id="accountInfo">
+        <p>Loading account info...</p>
+      </div>
+
+      <button class="button button-primary" id="logoutBtn2">Logout</button>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://qhpvcxrktcfbafykzfzr.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadAccountInfo() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const user = session.user;
+      const schoolName = user.user_metadata?.school_name || "Not set";
+      const fullName = user.user_metadata?.full_name || "Not set";
+
+      document.getElementById("accountInfo").innerHTML = `
+        <p><strong>School / College name:</strong> ${schoolName}</p>
+        <p><strong>Full name:</strong> ${fullName}</p>
+        <p><strong>Email:</strong> ${user.email}</p>
+      `;
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", function (e) {
+      e.preventDefault();
+      logout();
+    });
+    document.getElementById("logoutBtn2").addEventListener("click", logout);
+
+    loadAccountInfo();
+  </script>
+</body>
+</html>
