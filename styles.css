@@ -316,11 +316,10 @@ main {
 }
 
 .footer-logo {
-  width: 70px;
-  height: 70px;
-  object-fit: contain;
+  width: 200px;
+  height: auto;
   display: block;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.15rem;
 }
 
 .footer-brand-name {
