@@ -564,3 +564,50 @@ input:focus {
   .timetable-table { font-size: 12px; }
   .timetable-table th, .timetable-table td { padding: 6px; }
 }
+/* Smooth animations */
+* {
+  transition: all 0.2s ease;
+}
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(37,99,235,0.25);
+}
+.card-panel {
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile-friendly sidebar */
+.sidebar-toggle-btn {
+  display: none;
+  background: #2563EB;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  .sidebar {
+    display: none;
+    width: 100%;
+  }
+  .sidebar.open {
+    display: block;
+  }
+  .sidebar-toggle-btn {
+    display: inline-block;
+  }
+  .timetable-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
