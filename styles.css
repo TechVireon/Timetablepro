@@ -296,68 +296,76 @@ main {
 
 .site-footer {
   margin-top: auto;
-  background: #1d2740;
-  color: #ffffff;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 2.5rem 0 2rem;
+  background: #f3f4f6;
+  color: #1f2937;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 3.5rem 0 2rem;
 }
 
-.footer-inner {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
-  gap: 2.2rem;
-  align-items: start;
+.site-footer .container {
+  max-width: 1200px;
 }
 
-.footer-inner p,
-.footer-inner a,
-.footer-inner span,
-.footer-inner li {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.96rem;
-  line-height: 1.8;
+.footer-brand-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.35rem;
 }
 
-.footer-brand-wrap {
-  margin: 0 0 0.9rem;
+.footer-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 0.2rem;
 }
 
-.footer-brand-text {
-  margin: 0;
-  display: inline-block;
-  font-family: 'Poppins', 'Inter', sans-serif;
-  font-size: clamp(1.6rem, 2vw, 2.2rem);
-  font-weight: 700;
+.footer-brand-name {
+  font-size: clamp(1.8rem, 2vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.2;
   letter-spacing: -0.04em;
-  color: #ffffff;
-  line-height: 1.1;
+  color: #111827;
 }
 
-.tech-tagline {
-  max-width: 22rem;
-  color: rgba(255, 255, 255, 0.82);
-  margin: 0 0 1.2rem;
+.footer-tagline {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.footer-build {
+  margin: 0.4rem 0 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #4b5563;
 }
 
 .tech-socials {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 0.8rem;
+  margin: 0.5rem 0 1.25rem;
 }
 
 .social-icon {
-  width: 2.55rem;
-  height: 2.55rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: #e5e7eb;
+  color: #1f2937;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
   transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -369,84 +377,68 @@ main {
 
 .social-icon:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.14);
-  color: #dbeafe;
-}
-
-.footer-col {
-  min-width: 0;
-}
-
-.footer-col h3 {
-  margin: 0 0 1rem;
-  padding-bottom: 0.6rem;
-  border-bottom: 2px solid rgba(59, 130, 246, 0.92);
-  color: #ffffff;
-  font-size: 1.2rem;
-  display: inline-block;
-  width: auto;
-}
-
-.footer-col ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.5rem;
-}
-
-.footer-col li {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.footer-col a {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.contact-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-}
-
-.contact-icon {
-  display: inline-flex;
-  width: 1.2rem;
-  justify-content: center;
-  color: #ff4d4d;
-  font-size: 1rem;
+  background: #dfe3ea;
+  color: #111827;
 }
 
 .footer-contact {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.5rem;
+  margin: 0 0 1.25rem;
+  font-size: 0.94rem;
+  color: #374151;
 }
 
-@media (max-width: 900px) {
-  .footer-inner {
-    grid-template-columns: 1fr 1fr;
-  }
+.footer-contact a {
+  color: #111827;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-contact a:hover {
+  text-decoration: underline;
+}
+
+.footer-copyright {
+  margin: 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  text-align: center;
+  color: #4b5563;
+  font-size: 0.88rem;
+}
+
+.site-footer.minimal-footer {
+  padding: 1.25rem 0 0.8rem;
+  border-top: 0;
+}
+
+.site-footer.minimal-footer .footer-copyright {
+  padding-top: 0.5rem;
+  border-top: 0;
+  font-size: 0.8rem;
 }
 
 @media (max-width: 600px) {
   .site-footer {
-    padding: 2rem 0 1.5rem;
+    padding: 2.5rem 0 1.5rem;
   }
 
-  .footer-inner {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+  .footer-brand-name {
+    font-size: 1.5rem;
   }
 
-  .footer-brand-wrap {
-    margin-bottom: 0.7rem;
-  }
-
-  .footer-brand-text {
-    font-size: 1.45rem;
+  .footer-tagline,
+  .footer-build,
+  .footer-contact {
+    font-size: 0.88rem;
   }
 
   .tech-socials {
-    justify-content: flex-start;
+    gap: 0.7rem;
   }
 }
 
