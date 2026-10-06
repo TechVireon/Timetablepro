@@ -29,11 +29,20 @@
       <div class="card-panel" id="accountInfo">
         <p>Loading account info...</p>
       </div>
-            <div class="card-panel">
+
+      <div class="card-panel">
         <label>
           <span>Default timetable layout</span>
           <select id="layoutPref">
-                  <div class="card-panel">
+            <option value="horizontal">Days across the top</option>
+            <option value="vertical">Days down the side</option>
+          </select>
+        </label>
+        <button class="button button-primary" id="saveLayoutBtn">Save Preference</button>
+        <p id="layoutSaveMsg"></p>
+      </div>
+
+      <div class="card-panel">
         <label>
           <span>School start time</span>
           <input type="time" id="startTime" value="08:00" />
@@ -53,25 +62,6 @@
         <button class="button button-primary" id="saveTimingBtn">Save Timing</button>
         <p id="timingSaveMsg"></p>
       </div>
-            <option value="horizontal">Days across the top</option>
-            <option value="vertical">Days down the side</option>
-          </select>
-        </label>
-        <button class="button button-primary" id="saveLayoutBtn">Save Preference</button>
-        <p id="layoutSaveMsg"></p>
-      </div>
-          document.getElementById("saveTimingBtn").addEventListener("click", async function () {
-      const { error } = await supabaseClient.auth.updateUser({
-        data: {
-          start_time: document.getElementById("startTime").value,
-          period_length: parseInt(document.getElementById("periodLength").value),
-          break_after: parseInt(document.getElementById("breakAfter").value),
-          break_length: parseInt(document.getElementById("breakLength").value)
-        }
-      });
-      const msg = document.getElementById("timingSaveMsg");
-      msg.textContent = error ? "Could not save: " + error.message : "Saved!";
-    });
 
       <button class="button button-primary" id="logoutBtn2">Logout</button>
     </main>
@@ -124,14 +114,18 @@
       const user = session.user;
       const schoolName = user.user_metadata?.school_name || "Not set";
       const fullName = user.user_metadata?.full_name || "Not set";
-            const savedLayout = user.user_metadata?.timetable_layout || "horizontal";
-      document.getElementById("layoutPref").value = savedLayout;
 
       document.getElementById("accountInfo").innerHTML = `
         <p><strong>School / College name:</strong> ${schoolName}</p>
         <p><strong>Full name:</strong> ${fullName}</p>
         <p><strong>Email:</strong> ${user.email}</p>
       `;
+
+      document.getElementById("layoutPref").value = user.user_metadata?.timetable_layout || "horizontal";
+      document.getElementById("startTime").value = user.user_metadata?.start_time || "08:00";
+      document.getElementById("periodLength").value = user.user_metadata?.period_length || 40;
+      document.getElementById("breakAfter").value = user.user_metadata?.break_after || 4;
+      document.getElementById("breakLength").value = user.user_metadata?.break_length || 30;
     }
 
     async function logout() {
@@ -145,13 +139,33 @@
     });
     document.getElementById("logoutBtn2").addEventListener("click", logout);
 
-    loadAccountInfo();
-        document.getElementById("saveLayoutBtn").addEventListener("click", async function () {
+    document.getElementById("saveLayoutBtn").addEventListener("click", async function () {
       const layout = document.getElementById("layoutPref").value;
       const { error } = await supabaseClient.auth.updateUser({
         data: { timetable_layout: layout }
       });
-    
+      const msg = document.getElementById("layoutSaveMsg");
+      msg.textContent = error ? "Could not save: " + error.message : "Saved!";
+    });
+
+    document.getElementById("saveTimingBtn").addEventListener("click", async function () {
+      const { error } = await supabaseClient.auth.updateUser({
+        data: {
+          start_time: document.getElementById("startTime").value,
+          period_length: parseInt(document.getElementById("periodLength").value),
+          break_after: parseInt(document.getElementById("breakAfter").value),
+          break_length: parseInt(document.getElementById("breakLength").value)
+        }
+      });
+      const msg = document.getElementById("timingSaveMsg");
+      msg.textContent = error ? "Could not save: " + error.message : "Saved!";
+    });
+
+    document.getElementById("sidebarToggle")?.addEventListener("click", function () {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+
+    loadAccountInfo();
   </script>
 </body>
 </html>
