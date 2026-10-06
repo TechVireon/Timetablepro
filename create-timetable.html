@@ -58,17 +58,21 @@
     const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
 
     async function checkLogin() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) window.location.href = "login.html";
-    }
-          window.savedLayoutPreference = session.user.user_metadata?.timetable_layout || "horizontal";
-    checkLogin();
-          window.savedTiming = {
-        startTime: session.user.user_metadata?.start_time || "08:00",
-        periodLength: session.user.user_metadata?.period_length || 40,
-        breakAfter: session.user.user_metadata?.break_after || 4,
-        breakLength: session.user.user_metadata?.break_length || 30
-      };
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  window.savedLayoutPreference = session.user.user_metadata?.timetable_layout || "horizontal";
+  window.savedTiming = {
+    startTime: session.user.user_metadata?.start_time || "08:00",
+    periodLength: session.user.user_metadata?.period_length || 40,
+    breakAfter: session.user.user_metadata?.break_after || 4,
+    breakLength: session.user.user_metadata?.break_length || 30
+  };
+}
+checkLogin();
 
     document.getElementById("logoutBtn").addEventListener("click", async function (e) {
       e.preventDefault();
