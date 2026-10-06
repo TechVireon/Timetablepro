@@ -61,6 +61,7 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) window.location.href = "login.html";
     }
+          window.savedLayoutPreference = session.user.user_metadata?.timetable_layout || "horizontal";
     checkLogin();
 
     document.getElementById("logoutBtn").addEventListener("click", async function (e) {
@@ -175,25 +176,41 @@
       }
     }
     function renderTimetables(timetable, days, periodsPerDay) {
+      const layout = window.savedLayoutPreference || "horizontal";
       const resultArea = document.getElementById("resultArea");
       resultArea.innerHTML = "";
 
       Object.keys(timetable).forEach(function (className) {
         const section = document.createElement("div");
         section.className = "card-panel";
-        let html = `<h3>${className}</h3><table class="timetable-table"><tr><th>Period</th>`;
+        let html = `<h3>${className}</h3><table class="timetable-table">`;
 
-        for (let d = 0; d < days; d++) html += `<th>Day ${d + 1}</th>`;
-        html += `</tr>`;
-
-        for (let p = 0; p < periodsPerDay; p++) {
-          html += `<tr><td>Period ${p + 1}</td>`;
-          for (let d = 0; d < days; d++) {
-            const cell = timetable[className][d] && timetable[className][d][p];
-            html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
-          }
+        if (layout === "horizontal") {
+          html += `<tr><th>Period</th>`;
+          for (let d = 0; d < days; d++) html += `<th>Day ${d + 1}</th>`;
           html += `</tr>`;
+          for (let p = 0; p < periodsPerDay; p++) {
+            html += `<tr><td>Period ${p + 1}</td>`;
+            for (let d = 0; d < days; d++) {
+              const cell = timetable[className][d] && timetable[className][d][p];
+              html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
+            }
+            html += `</tr>`;
+          }
+        } else {
+          html += `<tr><th>Day</th>`;
+          for (let p = 0; p < periodsPerDay; p++) html += `<th>Period ${p + 1}</th>`;
+          html += `</tr>`;
+          for (let d = 0; d < days; d++) {
+            html += `<tr><td>Day ${d + 1}</td>`;
+            for (let p = 0; p < periodsPerDay; p++) {
+              const cell = timetable[className][d] && timetable[className][d][p];
+              html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
+            }
+            html += `</tr>`;
+          }
         }
+
         html += `</table>`;
         html += `<button class="button button-primary downloadBtn" data-class="${className}">Download PDF</button>`;
         section.innerHTML = html;
@@ -203,8 +220,6 @@
       document.querySelectorAll(".downloadBtn").forEach(function (btn) {
         btn.addEventListener("click", async function () {
           const className = btn.getAttribute("data-class");
-          const days = parseInt(document.getElementById("days").value);
-          const periodsPerDay = parseInt(document.getElementById("periodsPerDay").value);
           const classes = {};
           document.querySelectorAll("#classesContainer > .card-panel").forEach(function (classDiv) {
             const cName = classDiv.querySelector(".className").value.trim();
