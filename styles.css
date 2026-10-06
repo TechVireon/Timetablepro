@@ -817,3 +817,12 @@ input:focus {
   color: #9CA3AF;
   font-style: italic;
 }
+.button-danger {
+  background: #FFFFFF;
+  color: #DC2626;
+  border: 1px solid #DC2626;
+}
+.button-danger:hover {
+  background: #DC2626;
+  color: white;
+}
