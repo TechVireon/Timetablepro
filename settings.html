@@ -151,7 +151,7 @@
       const { error } = await supabaseClient.auth.updateUser({
         data: { timetable_layout: layout }
       });
-            document.getElementById("startTime").value = user.user_metadata?.start_time || "08:00";
+       document.getElementById("startTime").value = user.user_metadata?.start_time || "08:00";
       document.getElementById("periodLength").value = user.user_metadata?.period_length || 40;
       document.getElementById("breakAfter").value = user.user_metadata?.break_after || 4;
       document.getElementById("breakLength").value = user.user_metadata?.break_length || 30;
