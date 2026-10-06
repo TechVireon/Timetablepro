@@ -63,6 +63,12 @@
     }
           window.savedLayoutPreference = session.user.user_metadata?.timetable_layout || "horizontal";
     checkLogin();
+          window.savedTiming = {
+        startTime: session.user.user_metadata?.start_time || "08:00",
+        periodLength: session.user.user_metadata?.period_length || 40,
+        breakAfter: session.user.user_metadata?.break_after || 4,
+        breakLength: session.user.user_metadata?.break_length || 30
+      };
 
     document.getElementById("logoutBtn").addEventListener("click", async function (e) {
       e.preventDefault();
@@ -175,8 +181,36 @@
         }
       }
     }
-    function renderTimetables(timetable, days, periodsPerDay) {
+        function minutesToTime(totalMinutes) {
+      const h = Math.floor(totalMinutes / 60) % 24;
+      const m = totalMinutes % 60;
+      const ampm = h >= 12 ? "PM" : "AM";
+      let displayHour = h % 12;
+      if (displayHour === 0) displayHour = 12;
+      return `${displayHour}:${m.toString().padStart(2, "0")} ${ampm}`;
+    }
+
+    function getPeriodTimeline(timing, totalPeriods) {
+      const [h, m] = timing.startTime.split(":").map(Number);
+      let current = h * 60 + m;
+      const timeline = [];
+      for (let p = 1; p <= totalPeriods; p++) {
+        const startMin = current;
+        const endMin = current + timing.periodLength;
+        timeline.push({ period: p, isBreak: false, label: minutesToTime(startMin) + " - " + minutesToTime(endMin) });
+        current = endMin;
+        if (p === timing.breakAfter) {
+          const breakEnd = current + timing.breakLength;
+          timeline.push({ period: null, isBreak: true, label: minutesToTime(current) + " - " + minutesToTime(breakEnd) });
+          current = breakEnd;
+        }
+      }
+      return timeline;
+    }
+        function renderTimetables(timetable, days, periodsPerDay) {
       const layout = window.savedLayoutPreference || "horizontal";
+      const timing = window.savedTiming || { startTime: "08:00", periodLength: 40, breakAfter: 4, breakLength: 30 };
+      const timeline = getPeriodTimeline(timing, periodsPerDay);
       const resultArea = document.getElementById("resultArea");
       resultArea.innerHTML = "";
 
@@ -186,27 +220,41 @@
         let html = `<h3>${className}</h3><table class="timetable-table">`;
 
         if (layout === "horizontal") {
-          html += `<tr><th>Period</th>`;
+          html += `<tr><th>Time</th>`;
           for (let d = 0; d < days; d++) html += `<th>Day ${d + 1}</th>`;
           html += `</tr>`;
-          for (let p = 0; p < periodsPerDay; p++) {
-            html += `<tr><td>Period ${p + 1}</td>`;
-            for (let d = 0; d < days; d++) {
-              const cell = timetable[className][d] && timetable[className][d][p];
-              html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
+
+          timeline.forEach(function (slot) {
+            if (slot.isBreak) {
+              html += `<tr><td class="break-cell">Break<br><small>${slot.label}</small></td>`;
+              for (let d = 0; d < days; d++) html += `<td class="break-cell">-</td>`;
+              html += `</tr>`;
+            } else {
+              html += `<tr><td>${slot.label}</td>`;
+              for (let d = 0; d < days; d++) {
+                const cell = timetable[className][d] && timetable[className][d][slot.period - 1];
+                html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
+              }
+              html += `</tr>`;
             }
-            html += `</tr>`;
-          }
+          });
         } else {
           html += `<tr><th>Day</th>`;
-          for (let p = 0; p < periodsPerDay; p++) html += `<th>Period ${p + 1}</th>`;
+          timeline.forEach(function (slot) {
+            html += slot.isBreak ? `<th class="break-cell">Break<br><small>${slot.label}</small></th>` : `<th>${slot.label}</th>`;
+          });
           html += `</tr>`;
+
           for (let d = 0; d < days; d++) {
             html += `<tr><td>Day ${d + 1}</td>`;
-            for (let p = 0; p < periodsPerDay; p++) {
-              const cell = timetable[className][d] && timetable[className][d][p];
-              html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
-            }
+            timeline.forEach(function (slot) {
+              if (slot.isBreak) {
+                html += `<td class="break-cell">-</td>`;
+              } else {
+                const cell = timetable[className][d] && timetable[className][d][slot.period - 1];
+                html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
+              }
+            });
             html += `</tr>`;
           }
         }
