@@ -33,6 +33,26 @@
         <label>
           <span>Default timetable layout</span>
           <select id="layoutPref">
+                  <div class="card-panel">
+        <label>
+          <span>School start time</span>
+          <input type="time" id="startTime" value="08:00" />
+        </label>
+        <label>
+          <span>Period length (minutes)</span>
+          <input type="number" id="periodLength" value="40" min="20" max="90" />
+        </label>
+        <label>
+          <span>Break comes after which period?</span>
+          <input type="number" id="breakAfter" value="4" min="1" max="10" />
+        </label>
+        <label>
+          <span>Break length (minutes)</span>
+          <input type="number" id="breakLength" value="30" min="5" max="60" />
+        </label>
+        <button class="button button-primary" id="saveTimingBtn">Save Timing</button>
+        <p id="timingSaveMsg"></p>
+      </div>
             <option value="horizontal">Days across the top</option>
             <option value="vertical">Days down the side</option>
           </select>
@@ -40,6 +60,18 @@
         <button class="button button-primary" id="saveLayoutBtn">Save Preference</button>
         <p id="layoutSaveMsg"></p>
       </div>
+          document.getElementById("saveTimingBtn").addEventListener("click", async function () {
+      const { error } = await supabaseClient.auth.updateUser({
+        data: {
+          start_time: document.getElementById("startTime").value,
+          period_length: parseInt(document.getElementById("periodLength").value),
+          break_after: parseInt(document.getElementById("breakAfter").value),
+          break_length: parseInt(document.getElementById("breakLength").value)
+        }
+      });
+      const msg = document.getElementById("timingSaveMsg");
+      msg.textContent = error ? "Could not save: " + error.message : "Saved!";
+    });
 
       <button class="button button-primary" id="logoutBtn2">Logout</button>
     </main>
@@ -119,6 +151,10 @@
       const { error } = await supabaseClient.auth.updateUser({
         data: { timetable_layout: layout }
       });
+            document.getElementById("startTime").value = user.user_metadata?.start_time || "08:00";
+      document.getElementById("periodLength").value = user.user_metadata?.period_length || 40;
+      document.getElementById("breakAfter").value = user.user_metadata?.break_after || 4;
+      document.getElementById("breakLength").value = user.user_metadata?.break_length || 30;
       const msg = document.getElementById("layoutSaveMsg");
       msg.textContent = error ? "Could not save: " + error.message : "Saved!";
     });
