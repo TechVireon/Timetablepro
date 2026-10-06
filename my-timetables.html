@@ -39,7 +39,7 @@
     const SUPABASE_URL = "https://qhpvcxrktcfbafykzfzr.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
+    const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
 
     document.getElementById("logoutBtn").addEventListener("click", async function (e) {
       e.preventDefault();
@@ -77,22 +77,19 @@
         const card = document.createElement("div");
         card.className = "card-panel";
         const date = new Date(row.created_at).toLocaleDateString();
-                card.innerHTML = `
-          <h3>${row.class_name}</h3>
-          <p>Saved on ${date}</p>
-          <button class="button button-primary viewBtn">View</button>
-          <button class="button button-secondary downloadBtn">Download PDF</button>
-        `;
-                card.innerHTML = `
+
+        card.innerHTML = `
           <h3>${row.class_name}</h3>
           <p>Saved on ${date}</p>
           <button class="button button-primary viewBtn">View</button>
           <button class="button button-secondary downloadBtn">Download PDF</button>
           <button class="button button-danger deleteBtn">Delete</button>
         `;
+
         card.querySelector(".viewBtn").addEventListener("click", function () {
           renderSavedTimetable(row);
         });
+
         card.querySelector(".downloadBtn").addEventListener("click", async function () {
           const response = await fetch(`${BACKEND_URL}/download-saved-pdf/${row.class_name}`, {
             method: "POST",
@@ -110,6 +107,7 @@
           a.download = `${row.class_name}_timetable.pdf`;
           a.click();
         });
+
         card.querySelector(".deleteBtn").addEventListener("click", async function () {
           const confirmed = confirm(`Delete the timetable for "${row.class_name}"? This cannot be undone.`);
           if (!confirmed) return;
@@ -123,6 +121,8 @@
         });
 
         listArea.appendChild(card);
+      });
+    }
 
     function renderSavedTimetable(row) {
       const viewArea = document.getElementById("viewArea");
@@ -146,6 +146,10 @@
       viewArea.innerHTML = html;
       viewArea.scrollIntoView({ behavior: "smooth" });
     }
+
+    document.getElementById("sidebarToggle")?.addEventListener("click", function () {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
 
     loadTimetables();
   </script>
