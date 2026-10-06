@@ -55,6 +55,8 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const dayNames = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
     const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
 
     async function checkLogin() {
@@ -225,7 +227,7 @@ checkLogin();
 
         if (layout === "horizontal") {
           html += `<tr><th>Time</th>`;
-          for (let d = 0; d < days; d++) html += `<th>Day ${d + 1}</th>`;
+          for (let d = 0; d < days; d++) html += `<th>${dayNames[d]}</th>`;
           html += `</tr>`;
 
           timeline.forEach(function (slot) {
@@ -250,7 +252,7 @@ checkLogin();
           html += `</tr>`;
 
           for (let d = 0; d < days; d++) {
-            html += `<tr><td>Day ${d + 1}</td>`;
+            html += `<tr><td>${dayNames[d]}</td>`;
             timeline.forEach(function (slot) {
               if (slot.isBreak) {
                 html += `<td class="break-cell">-</td>`;

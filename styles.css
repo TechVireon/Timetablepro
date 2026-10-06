@@ -633,11 +633,12 @@ input:focus {
 }
 
 .timetable-table th {
-  background: #2563eb;
+  background: linear-gradient(180deg, #2563EB 0%, #4F8EF7 100%);
   color: white;
   padding: 10px;
   text-align: center;
   font-weight: 600;
+  box-shadow: inset 0 -6px 10px rgba(255,255,255,0.15);
 }
 
 .timetable-table td {

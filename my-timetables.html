@@ -41,6 +41,8 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
 
+    const dayNames = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
     document.getElementById("logoutBtn").addEventListener("click", async function (e) {
       e.preventDefault();
       await supabaseClient.auth.signOut();
@@ -131,7 +133,7 @@
       const schedule = row.data;
 
       let html = `<div class="card-panel"><h3>${row.class_name}</h3><table class="timetable-table"><tr><th>Period</th>`;
-      for (let d = 0; d < days; d++) html += `<th>Day ${d + 1}</th>`;
+      for (let d = 0; d < days; d++) html += `<th>${dayNames[d]}</th>`;
       html += `</tr>`;
 
       for (let p = 0; p < periodsPerDay; p++) {
