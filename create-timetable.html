@@ -91,14 +91,24 @@ checkLogin();
       div.className = "card-panel";
       div.id = classId;
       div.innerHTML = `
-        <label>
-          <span>Class name</span>
-          <input type="text" class="className" placeholder="e.g. 9th A" />
-        </label>
+        <button type="button" class="removeClassBtn" aria-label="Remove class">×</button>
+        <div class="classHeader">
+          <label>
+            <span>Class name</span>
+            <input type="text" class="className" placeholder="e.g. 9th A" aria-label="Class name" />
+          </label>
+        </div>
+        <div class="subjectsHeading">Subjects</div>
         <div class="subjectsContainer"></div>
         <button type="button" class="button button-secondary addSubjectBtn">+ Add Subject</button>
       `;
       document.getElementById("classesContainer").appendChild(div);
+
+      div.querySelector(".removeClassBtn").addEventListener("click", function () {
+        if (confirm("Remove this class and all its subjects?")) {
+          div.remove();
+        }
+      });
 
       div.querySelector(".addSubjectBtn").addEventListener("click", function () {
         addSubject(div.querySelector(".subjectsContainer"));
@@ -111,11 +121,19 @@ checkLogin();
       const row = document.createElement("div");
       row.className = "subject-row";
       row.innerHTML = `
-        <input type="text" class="subjectName" placeholder="Subject (e.g. Math)" />
-        <input type="text" class="teacherName" placeholder="Teacher name" />
-        <input type="number" class="periodsWeek" placeholder="Periods/week" min="1" value="5" />
+        <input type="text" class="subjectName" placeholder="Subject" aria-label="Subject" />
+        <input type="text" class="teacherName" placeholder="Teacher" aria-label="Teacher" />
+        <label class="periodsField">
+          <span>Periods per week</span>
+          <input type="number" class="periodsWeek" placeholder="Periods per week" aria-label="Periods per week" min="1" value="5" />
+        </label>
+        <button type="button" class="removeSubjectBtn" aria-label="Remove subject">×</button>
       `;
       container.appendChild(row);
+
+      row.querySelector(".removeSubjectBtn").addEventListener("click", function () {
+        row.remove();
+      });
     }
 
     document.getElementById("addClassBtn").addEventListener("click", addClass);

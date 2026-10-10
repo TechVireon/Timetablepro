@@ -827,3 +827,153 @@ input:focus {
   background: #DC2626;
   color: white;
 }
+
+#classesContainer {
+  display: grid;
+  gap: 20px;
+  margin: 1.5rem 0;
+}
+
+#classesContainer > .card-panel {
+  position: relative;
+  padding: 20px;
+  border: 1px solid #E5E7EB;
+  border-left: 4px solid #2563EB;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+#classesContainer .classHeader {
+  padding-right: 40px;
+}
+
+#classesContainer .classHeader input.className {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+#classesContainer .subjectsHeading {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #E5E7EB;
+  color: #6B7280;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+#classesContainer .subjectsContainer {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+#classesContainer .subject-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.8fr) 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #F9FAFB;
+  animation: fadeIn 0.3s ease both;
+}
+
+#classesContainer .subject-row input {
+  min-width: 0;
+  padding: 0.7rem 0.75rem;
+  border-radius: 8px;
+}
+
+#classesContainer .subject-row .periodsField {
+  min-width: 0;
+  gap: 3px;
+  color: #6B7280;
+  font-size: 0.72rem;
+}
+
+#classesContainer .subject-row .periodsField input {
+  font-size: 0.9rem;
+}
+
+#classesContainer .removeClassBtn,
+#classesContainer .removeSubjectBtn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  padding: 0;
+  color: #6B7280;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+#classesContainer .removeClassBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: #F3F4F6;
+  font-size: 1.25rem;
+}
+
+#classesContainer .removeClassBtn:hover {
+  color: #DC2626;
+  background: #FEE2E2;
+}
+
+#classesContainer .removeSubjectBtn {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: transparent;
+  font-size: 1.2rem;
+}
+
+#classesContainer .removeSubjectBtn:hover {
+  color: #DC2626;
+}
+
+#classesContainer .addSubjectBtn {
+  width: auto;
+  min-height: 36px;
+  padding: 0.45rem 0.8rem;
+  border-color: #D1D5DB;
+  color: #4B5563;
+  box-shadow: none;
+  font-size: 0.85rem;
+}
+
+#classesContainer .addSubjectBtn:hover {
+  background: #F9FAFB;
+  border-color: #9CA3AF;
+  box-shadow: none;
+}
+
+@media (max-width: 600px) {
+  #classesContainer > .card-panel {
+    padding: 18px;
+  }
+
+  #classesContainer .subject-row {
+    grid-template-columns: minmax(0, 1fr) 24px;
+    gap: 8px;
+  }
+
+  #classesContainer .subject-row input {
+    grid-column: 1;
+  }
+
+  #classesContainer .subject-row .removeSubjectBtn {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: center;
+  }
+
+  #classesContainer .addSubjectBtn {
+    width: auto;
+  }
+}
