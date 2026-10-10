@@ -15,6 +15,7 @@
       <div class="brand">TimetablePro</div>
       <nav class="sidebar-nav">
         <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="create-timetable.html">Create Timetable</a>
         <a href="my-timetables.html">My Timetables</a>
         <a href="settings.html">Settings</a>
         <a href="#" id="logoutBtn">Logout</a>
@@ -66,8 +67,7 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Check if user is actually logged in — if not, send them back to login
-        async function checkLogin() {
+    async function checkLogin() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
         window.location.href = "login.html";
@@ -81,14 +81,15 @@
     }
     checkLogin();
 
-    // Logout button
     document.getElementById("logoutBtn").addEventListener("click", async function (e) {
       e.preventDefault();
       await supabaseClient.auth.signOut();
       window.location.href = "login.html";
     });
 
-  
+    document.getElementById("sidebarToggle").addEventListener("click", function () {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
   </script>
 </body>
 </html>

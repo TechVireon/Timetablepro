@@ -15,6 +15,7 @@
       <div class="brand">TimetablePro</div>
       <nav class="sidebar-nav">
         <a href="dashboard.html">Dashboard</a>
+        <a href="create-timetable.html" class="active">Create Timetable</a>
         <a href="my-timetables.html">My Timetables</a>
         <a href="settings.html">Settings</a>
         <a href="#" id="logoutBtn">Logout</a>
@@ -55,26 +56,29 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
     const dayNames = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-    const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
+    window.savedLayoutPreference = "horizontal";
+    window.savedTiming = { startTime: "08:00", periodLength: 40, breakAfter: 4, breakLength: 30 };
 
     async function checkLogin() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) {
-    window.location.href = "login.html";
-    return;
-  }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = "login.html";
+        return;
+      }
 
-  window.savedLayoutPreference = session.user.user_metadata?.timetable_layout || "horizontal";
-  window.savedTiming = {
-    startTime: session.user.user_metadata?.start_time || "08:00",
-    periodLength: session.user.user_metadata?.period_length || 40,
-    breakAfter: session.user.user_metadata?.break_after || 4,
-    breakLength: session.user.user_metadata?.break_length || 30
-  };
-}
-checkLogin();
+      const meta = session.user.user_metadata || {};
+      window.savedLayoutPreference = meta.timetable_layout || "horizontal";
+      window.savedTiming = {
+        startTime: meta.start_time || "08:00",
+        periodLength: meta.period_length || 40,
+        breakAfter: meta.break_after || 4,
+        breakLength: meta.break_length || 30
+      };
+    }
+    const loginReady = checkLogin();
 
     document.getElementById("logoutBtn").addEventListener("click", async function (e) {
       e.preventDefault();
@@ -82,32 +86,31 @@ checkLogin();
       window.location.href = "login.html";
     });
 
+    document.getElementById("sidebarToggle").addEventListener("click", function () {
+      document.getElementById("sidebar").classList.toggle("open");
+    });
+
     let classCount = 0;
 
     function addClass() {
       classCount++;
-      const classId = `class-${classCount}`;
       const div = document.createElement("div");
-      div.className = "card-panel";
-      div.id = classId;
+      div.className = "card-panel class-box";
+      div.id = `class-${classCount}`;
       div.innerHTML = `
         <button type="button" class="removeClassBtn" aria-label="Remove class">×</button>
-        <div class="classHeader">
-          <label>
-            <span>Class name</span>
-            <input type="text" class="className" placeholder="e.g. 9th A" aria-label="Class name" />
-          </label>
-        </div>
-        <div class="subjectsHeading">Subjects</div>
+        <label>
+          <span>Class name</span>
+          <input type="text" class="className" placeholder="e.g. 9th A" />
+        </label>
+        <p class="subjects-label">Subjects</p>
         <div class="subjectsContainer"></div>
         <button type="button" class="button button-secondary addSubjectBtn">+ Add Subject</button>
       `;
       document.getElementById("classesContainer").appendChild(div);
 
       div.querySelector(".removeClassBtn").addEventListener("click", function () {
-        if (confirm("Remove this class and all its subjects?")) {
-          div.remove();
-        }
+        if (confirm("Remove this class and all its subjects?")) div.remove();
       });
 
       div.querySelector(".addSubjectBtn").addEventListener("click", function () {
@@ -121,12 +124,9 @@ checkLogin();
       const row = document.createElement("div");
       row.className = "subject-row";
       row.innerHTML = `
-        <input type="text" class="subjectName" placeholder="Subject" aria-label="Subject" />
-        <input type="text" class="teacherName" placeholder="Teacher" aria-label="Teacher" />
-        <label class="periodsField">
-          <span>Periods per week</span>
-          <input type="number" class="periodsWeek" placeholder="Periods per week" aria-label="Periods per week" min="1" value="5" />
-        </label>
+        <input type="text" class="subjectName" placeholder="Subject (e.g. Math)" />
+        <input type="text" class="teacherName" placeholder="Teacher name" />
+        <input type="number" class="periodsWeek" placeholder="Periods per week" min="1" value="5" />
         <button type="button" class="removeSubjectBtn" aria-label="Remove subject">×</button>
       `;
       container.appendChild(row);
@@ -139,10 +139,7 @@ checkLogin();
     document.getElementById("addClassBtn").addEventListener("click", addClass);
     addClass();
 
-    document.getElementById("generateBtn").addEventListener("click", async function () {
-      const days = parseInt(document.getElementById("days").value);
-      const periodsPerDay = parseInt(document.getElementById("periodsPerDay").value);
-
+    function collectClasses() {
       const classes = {};
       document.querySelectorAll("#classesContainer > .card-panel").forEach(function (classDiv) {
         const className = classDiv.querySelector(".className").value.trim();
@@ -159,8 +156,22 @@ checkLogin();
         });
         if (subjects.length) classes[className] = subjects;
       });
+      return classes;
+    }
 
+    document.getElementById("generateBtn").addEventListener("click", async function () {
+      await loginReady;
+
+      const days = parseInt(document.getElementById("days").value);
+      const periodsPerDay = parseInt(document.getElementById("periodsPerDay").value);
+      const classes = collectClasses();
       const resultArea = document.getElementById("resultArea");
+
+      if (Object.keys(classes).length === 0) {
+        resultArea.innerHTML = `<p style="color:red">Please add at least one class with a subject, a teacher and the periods per week.</p>`;
+        return;
+      }
+
       resultArea.innerHTML = "<p>Generating timetable...</p>";
 
       try {
@@ -177,35 +188,30 @@ checkLogin();
           return;
         }
 
-                renderTimetables(data.timetable, days, periodsPerDay);
+        renderTimetables(data.timetable, days, periodsPerDay);
         await saveTimetables(data.timetable, days, periodsPerDay);
       } catch (err) {
-        resultArea.innerHTML = `<p style="color:red">Could not reach the server. Check your backend link.</p>`;
+        resultArea.innerHTML = `<p style="color:red">Could not reach the server. It may be waking up, so please wait a minute and try again.</p>`;
       }
     });
 
-        async function saveTimetables(timetableData, days, periodsPerDay) {
+    async function saveTimetables(timetableData, days, periodsPerDay) {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session) {
-        console.log("No session found — user not logged in?");
-        return;
-      }
+      if (!session) return;
 
       for (const className in timetableData) {
         const { error } = await supabaseClient.from("timetables").insert({
           user_id: session.user.id,
           class_name: className,
-          data: timetableData[className]
+          data: timetableData[className],
+          days: days,
+          periods_per_day: periodsPerDay
         });
-
-        if (error) {
-          console.log("SAVE ERROR:", error.message);
-        } else {
-          console.log("Saved successfully:", className);
-        }
+        if (error) console.log("SAVE ERROR:", error.message);
       }
     }
-        function minutesToTime(totalMinutes) {
+
+    function minutesToTime(totalMinutes) {
       const h = Math.floor(totalMinutes / 60) % 24;
       const m = totalMinutes % 60;
       const ampm = h >= 12 ? "PM" : "AM";
@@ -231,9 +237,10 @@ checkLogin();
       }
       return timeline;
     }
-        function renderTimetables(timetable, days, periodsPerDay) {
+
+    function renderTimetables(timetable, days, periodsPerDay) {
       const layout = window.savedLayoutPreference || "horizontal";
-      const timing = window.savedTiming || { startTime: "08:00", periodLength: 40, breakAfter: 4, breakLength: 30 };
+      const timing = window.savedTiming;
       const timeline = getPeriodTimeline(timing, periodsPerDay);
       const resultArea = document.getElementById("resultArea");
       resultArea.innerHTML = "";
@@ -265,7 +272,9 @@ checkLogin();
         } else {
           html += `<tr><th>Day</th>`;
           timeline.forEach(function (slot) {
-            html += slot.isBreak ? `<th class="break-cell">Break<br><small>${slot.label}</small></th>` : `<th>${slot.label}</th>`;
+            html += slot.isBreak
+              ? `<th class="break-cell">Break<br><small>${slot.label}</small></th>`
+              : `<th>${slot.label}</th>`;
           });
           html += `</tr>`;
 
@@ -292,24 +301,11 @@ checkLogin();
       document.querySelectorAll(".downloadBtn").forEach(function (btn) {
         btn.addEventListener("click", async function () {
           const className = btn.getAttribute("data-class");
-          const classes = {};
-          document.querySelectorAll("#classesContainer > .card-panel").forEach(function (classDiv) {
-            const cName = classDiv.querySelector(".className").value.trim();
-            const subjects = [];
-            classDiv.querySelectorAll(".subject-row").forEach(function (row) {
-              subjects.push({
-                subject: row.querySelector(".subjectName").value.trim(),
-                teacher: row.querySelector(".teacherName").value.trim(),
-                periods_per_week: parseInt(row.querySelector(".periodsWeek").value)
-              });
-            });
-            classes[cName] = subjects;
-          });
 
           const response = await fetch(`${BACKEND_URL}/download-pdf/${className}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes })
+            body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes: collectClasses() })
           });
 
           const blob = await response.blob();
