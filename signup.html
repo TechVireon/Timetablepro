@@ -113,7 +113,7 @@
             const schoolName = document.getElementById("school-name").value;
       const fullName = document.getElementById("full-name").value;
 
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await supabaseClients.auth.signUp({
         email,
         password,
         options: {
