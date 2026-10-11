@@ -184,11 +184,23 @@
       resultArea.innerHTML = "<p>Generating timetable...</p>";
 
       try {
-        const response = await fetch(`${BACKEND_URL}/generate-timetable`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes })
-        });
+                  const timing = window.savedTiming;
+          const response = await fetch(`${BACKEND_URL}/download-saved-pdf/${encodeURIComponent(className)}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              schedule: timetable[className],
+              days: days,
+              periods_per_day: periodsPerDay,
+              layout: window.savedLayoutPreference || "horizontal",
+              start_time: timing.startTime,
+              period_length: timing.periodLength,
+              period_length_after: timing.periodLengthAfter,
+              break_enabled: timing.breakEnabled,
+              break_after: timing.breakAfter,
+              break_length: timing.breakLength
+            })
+          });
 
         const data = await response.json();
 

@@ -56,7 +56,8 @@
         return;
       }
 
-      const { data, error } = await supabaseClient
+      const meta = session.user.user_metadata || {};
+       const { data, error } = await supabaseClient
         .from("timetables")
         .select("*")
         .eq("user_id", session.user.id)
@@ -96,10 +97,17 @@
           const response = await fetch(`${BACKEND_URL}/download-saved-pdf/${row.class_name}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+           body: JSON.stringify({
               schedule: row.data,
               days: row.days || 5,
-              periods_per_day: row.periods_per_day || 7
+              periods_per_day: row.periods_per_day || 7,
+              layout: meta.timetable_layout || "horizontal",
+              start_time: meta.start_time || "08:00",
+              period_length: meta.period_length || 40,
+              period_length_after: meta.period_length_after || meta.period_length || 40,
+              break_enabled: meta.break_enabled !== false,
+              break_after: meta.break_after || 4,
+              break_length: meta.break_length || 30
             })
           });
           const blob = await response.blob();
