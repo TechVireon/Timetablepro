@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="settings-page">
   <div class="dashboard-layout">
     <aside class="sidebar" id="sidebar">
       <div class="brand">TimetablePro</div>
@@ -22,67 +22,79 @@
       </nav>
     </aside>
 
-    <main class="dashboard-main">
+    <main class="dashboard-main settings-main">
       <button class="sidebar-toggle-btn" id="sidebarToggle">☰ Menu</button>
       <h1>Settings</h1>
 
-      <div class="card-panel" id="accountInfo">
-        <p>Loading account info...</p>
-      </div>
-
-      <div class="card-panel">
-        <label>
-          <span>Default timetable layout</span>
-          <select id="layoutPref">
-            <option value="horizontal">Days across the top</option>
-            <option value="vertical">Days down the side</option>
-          </select>
-        </label>
-        <button class="button button-primary" id="saveLayoutBtn">Save Preference</button>
-        <p id="layoutSaveMsg"></p>
-      </div>
-
-      <div class="card-panel">
-        <label>
-          <span>School start time</span>
-          <input type="time" id="startTime" value="08:00" />
-        </label>
-
-        <div class="switch-row">
-          <div>
-            <strong>Include a break</strong>
-            <p class="setting-hint">Turn this on if your school has a break during the day.</p>
+      <div class="settings-stack">
+        <section class="card-panel settings-card">
+          <h2>Account</h2>
+          <div id="accountInfo" class="account-info">
+            <p>Loading account info...</p>
           </div>
-          <button type="button" id="breakToggle" class="toggle-switch" role="switch" aria-checked="true" aria-label="Include a break"></button>
+        </section>
+
+        <section class="card-panel settings-card">
+          <h2>Timetable layout</h2>
+          <label class="settings-field">
+            <span>Default timetable layout</span>
+            <select id="layoutPref">
+              <option value="horizontal">Days across the top</option>
+              <option value="vertical">Days down the side</option>
+            </select>
+          </label>
+          <button class="button button-primary" id="saveLayoutBtn">Save Preference</button>
+          <p id="layoutSaveMsg" class="settings-save-message"></p>
+        </section>
+
+        <section class="card-panel settings-card">
+          <h2>School timing</h2>
+          <div class="timing-fields">
+            <label class="settings-field">
+              <span>School start time</span>
+              <input type="time" id="startTime" value="08:00" />
+            </label>
+
+            <label class="settings-field">
+              <span id="periodLengthLabel">Period length before break (minutes)</span>
+              <input type="number" id="periodLength" value="40" min="20" max="120" />
+            </label>
+
+            <div class="switch-row">
+              <div>
+                <strong>Include a break</strong>
+                <p class="setting-hint">Turn this on if your school/college has a break during the day.</p>
+              </div>
+              <button type="button" id="breakToggle" class="toggle-switch" role="switch" aria-checked="true" aria-label="Include a break"></button>
+            </div>
+          </div>
+
+          <div id="breakOptions">
+            <div class="break-options-fields">
+              <label class="settings-field">
+                <span>Break comes after which period?</span>
+                <input type="number" id="breakAfter" value="4" min="1" max="10" />
+              </label>
+              <label class="settings-field">
+                <span>Break length (minutes)</span>
+                <input type="number" id="breakLength" value="30" min="5" max="90" />
+              </label>
+              <label class="settings-field">
+                <span>Period length after break (minutes)</span>
+                <input type="number" id="periodLengthAfter" value="40" min="20" max="120" />
+              </label>
+            </div>
+          </div>
+
+          <p class="timing-summary" id="timingSummary"></p>
+          <button class="button button-primary" id="saveTimingBtn">Save Timing</button>
+          <p id="timingSaveMsg" class="settings-save-message"></p>
+        </section>
+
+        <div class="settings-logout-row">
+          <button class="button button-primary" id="logoutBtn2">Logout</button>
         </div>
-
-        <label>
-          <span id="periodLengthLabel">Period length before break (minutes)</span>
-          <input type="number" id="periodLength" value="40" min="20" max="120" />
-        </label>
-
-        <div id="breakOptions">
-          <label>
-            <span>Break comes after which period?</span>
-            <input type="number" id="breakAfter" value="4" min="1" max="10" />
-          </label>
-          <label>
-            <span>Break length (minutes)</span>
-            <input type="number" id="breakLength" value="30" min="5" max="90" />
-          </label>
-          <label>
-            <span>Period length after break (minutes)</span>
-            <input type="number" id="periodLengthAfter" value="40" min="20" max="120" />
-          </label>
-        </div>
-
-        <p class="timing-summary" id="timingSummary"></p>
-
-        <button class="button button-primary" id="saveTimingBtn">Save Timing</button>
-        <p id="timingSaveMsg"></p>
       </div>
-
-      <button class="button button-primary" id="logoutBtn2">Logout</button>
     </main>
   </div>
 
