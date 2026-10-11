@@ -151,8 +151,8 @@
     function collectClasses() {
       const classes = {};
       document.querySelectorAll("#classesContainer > .card-panel").forEach(function (classDiv) {
-        const className = classDiv.querySelector(".className").value.trim();
-        if (!className) return;
+        const classNameValue = classDiv.querySelector(".className").value.trim();
+        if (!classNameValue) return;
 
         const subjects = [];
         classDiv.querySelectorAll(".subject-row").forEach(function (row) {
@@ -163,7 +163,7 @@
             subjects.push({ subject, teacher, periods_per_week: periods });
           }
         });
-        if (subjects.length) classes[className] = subjects;
+        if (subjects.length) classes[classNameValue] = subjects;
       });
       return classes;
     }
@@ -184,23 +184,11 @@
       resultArea.innerHTML = "<p>Generating timetable...</p>";
 
       try {
-                  const timing = window.savedTiming;
-          const response = await fetch(`${BACKEND_URL}/download-saved-pdf/${encodeURIComponent(className)}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              schedule: timetable[className],
-              days: days,
-              periods_per_day: periodsPerDay,
-              layout: window.savedLayoutPreference || "horizontal",
-              start_time: timing.startTime,
-              period_length: timing.periodLength,
-              period_length_after: timing.periodLengthAfter,
-              break_enabled: timing.breakEnabled,
-              break_after: timing.breakAfter,
-              break_length: timing.breakLength
-            })
-          });
+        const response = await fetch(`${BACKEND_URL}/generate-timetable`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes })
+        });
 
         const data = await response.json();
 
@@ -212,7 +200,7 @@
         renderTimetables(data.timetable, days, periodsPerDay);
         await saveTimetables(data.timetable, days, periodsPerDay);
       } catch (err) {
-        console.error("Generate Failed:", err);
+        console.error("Generate failed:", err);
         resultArea.innerHTML = `<p style="color:red">Could not reach the server. It may be waking up, so please wait a minute and try again.</p>`;
       }
     });
@@ -221,11 +209,11 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) return;
 
-      for (const className in timetableData) {
+      for (const name in timetableData) {
         const { error } = await supabaseClient.from("timetables").insert({
           user_id: session.user.id,
-          class_name: className,
-          data: timetableData[className],
+          class_name: name,
+          data: timetableData[name],
           days: days,
           periods_per_day: periodsPerDay
         });
@@ -265,6 +253,43 @@
       return timeline;
     }
 
+    async function downloadPdf(name, schedule, days, periodsPerDay) {
+      const timing = window.savedTiming;
+      try {
+        const response = await fetch(`${BACKEND_URL}/download-saved-pdf/${encodeURIComponent(name)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            schedule: schedule,
+            days: days,
+            periods_per_day: periodsPerDay,
+            layout: window.savedLayoutPreference || "horizontal",
+            start_time: timing.startTime,
+            period_length: timing.periodLength,
+            period_length_after: timing.periodLengthAfter,
+            break_enabled: timing.breakEnabled,
+            break_after: timing.breakAfter,
+            break_length: timing.breakLength
+          })
+        });
+
+        if (!response.ok) {
+          alert("Could not create the PDF. Please try again in a minute.");
+          return;
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${name}_timetable.pdf`;
+        a.click();
+      } catch (err) {
+        console.error("PDF download failed:", err);
+        alert("Could not reach the server. Please try again in a minute.");
+      }
+    }
+
     function renderTimetables(timetable, days, periodsPerDay) {
       const layout = window.savedLayoutPreference || "horizontal";
       const timing = window.savedTiming;
@@ -272,10 +297,10 @@
       const resultArea = document.getElementById("resultArea");
       resultArea.innerHTML = "";
 
-      Object.keys(timetable).forEach(function (className) {
+      Object.keys(timetable).forEach(function (name) {
         const section = document.createElement("div");
         section.className = "card-panel";
-        let html = `<h3>${className}</h3><table class="timetable-table">`;
+        let html = `<h3>${name}</h3><table class="timetable-table">`;
 
         if (layout === "horizontal") {
           html += `<tr><th>Time</th>`;
@@ -290,7 +315,7 @@
             } else {
               html += `<tr><td>${slot.label}</td>`;
               for (let d = 0; d < days; d++) {
-                const cell = timetable[className][d] && timetable[className][d][slot.period - 1];
+                const cell = timetable[name][d] && timetable[name][d][slot.period - 1];
                 html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
               }
               html += `</tr>`;
@@ -311,7 +336,7 @@
               if (slot.isBreak) {
                 html += `<td class="break-cell">-</td>`;
               } else {
-                const cell = timetable[className][d] && timetable[className][d][slot.period - 1];
+                const cell = timetable[name][d] && timetable[name][d][slot.period - 1];
                 html += `<td>${cell ? cell.subject + "<br><small>" + cell.teacher + "</small>" : "-"}</td>`;
               }
             });
@@ -320,28 +345,17 @@
         }
 
         html += `</table>`;
-        html += `<button class="button button-primary downloadBtn" data-class="${className}">Download PDF</button>`;
         section.innerHTML = html;
-        resultArea.appendChild(section);
-      });
 
-      document.querySelectorAll(".downloadBtn").forEach(function (btn) {
-        btn.addEventListener("click", async function () {
-          const className = btn.getAttribute("data-class");
-
-          const response = await fetch(`${BACKEND_URL}/download-pdf/${className}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes: collectClasses() })
-          });
-
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${className}_timetable.pdf`;
-          a.click();
+        const downloadBtn = document.createElement("button");
+        downloadBtn.className = "button button-primary";
+        downloadBtn.textContent = "Download PDF";
+        downloadBtn.addEventListener("click", function () {
+          downloadPdf(name, timetable[name], days, periodsPerDay);
         });
+        section.appendChild(downloadBtn);
+
+        resultArea.appendChild(section);
       });
     }
   </script>
