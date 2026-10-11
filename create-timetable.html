@@ -212,6 +212,7 @@
         renderTimetables(data.timetable, days, periodsPerDay);
         await saveTimetables(data.timetable, days, periodsPerDay);
       } catch (err) {
+        console.error("Generate Failed:", err);
         resultArea.innerHTML = `<p style="color:red">Could not reach the server. It may be waking up, so please wait a minute and try again.</p>`;
       }
     });
