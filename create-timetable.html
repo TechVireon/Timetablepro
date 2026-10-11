@@ -60,7 +60,14 @@
     const dayNames = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
     window.savedLayoutPreference = "horizontal";
-    window.savedTiming = { startTime: "08:00", periodLength: 40, breakAfter: 4, breakLength: 30 };
+    window.savedTiming = {
+      startTime: "08:00",
+      periodLength: 40,
+      periodLengthAfter: 40,
+      breakEnabled: true,
+      breakAfter: 4,
+      breakLength: 30
+    };
 
     async function checkLogin() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -74,6 +81,8 @@
       window.savedTiming = {
         startTime: meta.start_time || "08:00",
         periodLength: meta.period_length || 40,
+        periodLengthAfter: meta.period_length_after || meta.period_length || 40,
+        breakEnabled: meta.break_enabled !== false,
         breakAfter: meta.break_after || 4,
         breakLength: meta.break_length || 30
       };
@@ -223,13 +232,18 @@
     function getPeriodTimeline(timing, totalPeriods) {
       const [h, m] = timing.startTime.split(":").map(Number);
       let current = h * 60 + m;
+      const breakOn = timing.breakEnabled !== false;
+      const lengthAfter = timing.periodLengthAfter || timing.periodLength;
       const timeline = [];
+
       for (let p = 1; p <= totalPeriods; p++) {
+        const length = (breakOn && p > timing.breakAfter) ? lengthAfter : timing.periodLength;
         const startMin = current;
-        const endMin = current + timing.periodLength;
+        const endMin = current + length;
         timeline.push({ period: p, isBreak: false, label: minutesToTime(startMin) + " - " + minutesToTime(endMin) });
         current = endMin;
-        if (p === timing.breakAfter) {
+
+        if (breakOn && p === timing.breakAfter) {
           const breakEnd = current + timing.breakLength;
           timeline.push({ period: null, isBreak: true, label: minutesToTime(current) + " - " + minutesToTime(breakEnd) });
           current = breakEnd;

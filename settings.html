@@ -47,18 +47,37 @@
           <span>School start time</span>
           <input type="time" id="startTime" value="08:00" />
         </label>
+
+        <div class="switch-row">
+          <div>
+            <strong>Include a break</strong>
+            <p class="setting-hint">Turn this on if your school has a break during the day.</p>
+          </div>
+          <button type="button" id="breakToggle" class="toggle-switch" role="switch" aria-checked="true" aria-label="Include a break"></button>
+        </div>
+
         <label>
-          <span>Period length (minutes)</span>
-          <input type="number" id="periodLength" value="40" min="20" max="90" />
+          <span id="periodLengthLabel">Period length before break (minutes)</span>
+          <input type="number" id="periodLength" value="40" min="20" max="120" />
         </label>
-        <label>
-          <span>Break comes after which period?</span>
-          <input type="number" id="breakAfter" value="4" min="1" max="10" />
-        </label>
-        <label>
-          <span>Break length (minutes)</span>
-          <input type="number" id="breakLength" value="30" min="5" max="60" />
-        </label>
+
+        <div id="breakOptions">
+          <label>
+            <span>Break comes after which period?</span>
+            <input type="number" id="breakAfter" value="4" min="1" max="10" />
+          </label>
+          <label>
+            <span>Break length (minutes)</span>
+            <input type="number" id="breakLength" value="30" min="5" max="90" />
+          </label>
+          <label>
+            <span>Period length after break (minutes)</span>
+            <input type="number" id="periodLengthAfter" value="40" min="20" max="120" />
+          </label>
+        </div>
+
+        <p class="timing-summary" id="timingSummary"></p>
+
         <button class="button button-primary" id="saveTimingBtn">Save Timing</button>
         <p id="timingSaveMsg"></p>
       </div>
@@ -104,6 +123,42 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFocHZjeHJrdGNmYmFmeWt6ZnpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2NjMyMjIsImV4cCI6MjEwMTIzOTIyMn0.uC7PZ1OVwxb5_xFk7PhTHyXcOr1tn9tceJqUvWW-mdg";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const breakToggle = document.getElementById("breakToggle");
+
+    function isBreakOn() {
+      return breakToggle.getAttribute("aria-checked") === "true";
+    }
+
+    function updateSummary() {
+      const before = parseInt(document.getElementById("periodLength").value) || 0;
+      const after = parseInt(document.getElementById("periodLengthAfter").value) || 0;
+      const breakAfter = parseInt(document.getElementById("breakAfter").value) || 0;
+      const breakLength = parseInt(document.getElementById("breakLength").value) || 0;
+      const summary = document.getElementById("timingSummary");
+
+      if (isBreakOn()) {
+        summary.textContent = `Periods 1 to ${breakAfter}: ${before} min each. Break: ${breakLength} min. Periods after the break: ${after} min each.`;
+      } else {
+        summary.textContent = `All periods are ${before} min each. No break.`;
+      }
+    }
+
+    function setBreakEnabled(on) {
+      breakToggle.setAttribute("aria-checked", on ? "true" : "false");
+      document.getElementById("breakOptions").style.display = on ? "block" : "none";
+      document.getElementById("periodLengthLabel").textContent =
+        on ? "Period length before break (minutes)" : "Period length (minutes)";
+      updateSummary();
+    }
+
+    breakToggle.addEventListener("click", function () {
+      setBreakEnabled(!isBreakOn());
+    });
+
+    ["periodLength", "periodLengthAfter", "breakAfter", "breakLength"].forEach(function (id) {
+      document.getElementById(id).addEventListener("input", updateSummary);
+    });
+
     async function loadAccountInfo() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
@@ -112,8 +167,9 @@
       }
 
       const user = session.user;
-      const schoolName = user.user_metadata?.school_name || "Not set";
-      const fullName = user.user_metadata?.full_name || "Not set";
+      const meta = user.user_metadata || {};
+      const schoolName = meta.school_name || "Not set";
+      const fullName = meta.full_name || "Not set";
 
       document.getElementById("accountInfo").innerHTML = `
         <p><strong>School / College name:</strong> ${schoolName}</p>
@@ -121,11 +177,13 @@
         <p><strong>Email:</strong> ${user.email}</p>
       `;
 
-      document.getElementById("layoutPref").value = user.user_metadata?.timetable_layout || "horizontal";
-      document.getElementById("startTime").value = user.user_metadata?.start_time || "08:00";
-      document.getElementById("periodLength").value = user.user_metadata?.period_length || 40;
-      document.getElementById("breakAfter").value = user.user_metadata?.break_after || 4;
-      document.getElementById("breakLength").value = user.user_metadata?.break_length || 30;
+      document.getElementById("layoutPref").value = meta.timetable_layout || "horizontal";
+      document.getElementById("startTime").value = meta.start_time || "08:00";
+      document.getElementById("periodLength").value = meta.period_length || 40;
+      document.getElementById("periodLengthAfter").value = meta.period_length_after || meta.period_length || 40;
+      document.getElementById("breakAfter").value = meta.break_after || 4;
+      document.getElementById("breakLength").value = meta.break_length || 30;
+      setBreakEnabled(meta.break_enabled !== false);
     }
 
     async function logout() {
@@ -149,19 +207,25 @@
     });
 
     document.getElementById("saveTimingBtn").addEventListener("click", async function () {
+      const breakOn = isBreakOn();
+      const before = parseInt(document.getElementById("periodLength").value) || 40;
+      const after = parseInt(document.getElementById("periodLengthAfter").value) || before;
+
       const { error } = await supabaseClient.auth.updateUser({
         data: {
           start_time: document.getElementById("startTime").value,
-          period_length: parseInt(document.getElementById("periodLength").value),
-          break_after: parseInt(document.getElementById("breakAfter").value),
-          break_length: parseInt(document.getElementById("breakLength").value)
+          period_length: before,
+          break_enabled: breakOn,
+          period_length_after: breakOn ? after : before,
+          break_after: parseInt(document.getElementById("breakAfter").value) || 4,
+          break_length: parseInt(document.getElementById("breakLength").value) || 30
         }
       });
       const msg = document.getElementById("timingSaveMsg");
       msg.textContent = error ? "Could not save: " + error.message : "Saved!";
     });
 
-    document.getElementById("sidebarToggle")?.addEventListener("click", function () {
+    document.getElementById("sidebarToggle").addEventListener("click", function () {
       document.getElementById("sidebar").classList.toggle("open");
     });
 
