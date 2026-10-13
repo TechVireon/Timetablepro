@@ -40,7 +40,19 @@
           </label>
           <label>
             <span>Password</span>
-            <input type="password" id="login-password" placeholder="Enter your password" required />
+            <div class="password-field">
+              <input type="password" id="login-password" placeholder="Enter your password" required />
+              <button class="password-toggle" type="button" aria-label="Show password">
+                <svg class="password-toggle-icon password-toggle-icon--eye" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg class="password-toggle-icon password-toggle-icon--eye-off" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 3l18 18M10.6 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a15.8 15.8 0 0 1-3 3.8M6.2 6.2C3.5 8.1 2 12 2 12s3.6 7 10 7a10 10 0 0 0 4.2-.9" />
+                  <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                </svg>
+              </button>
+            </div>
           </label>
           <div class="form-row justify-end">
             <a href="#" class="link-small">Forgot password?</a>
@@ -110,6 +122,29 @@
         window.location.href = "dashboard.html";
       }
     });
+  </script>
+  <script>
+    (() => {
+      function togglePasswordVisibility(button) {
+        const field = button.closest(".password-field");
+        const passwordInput = field.querySelector("input");
+        const selectionStart = passwordInput.selectionStart;
+        const selectionEnd = passwordInput.selectionEnd;
+        const showPassword = passwordInput.type === "password";
+
+        passwordInput.type = showPassword ? "text" : "password";
+        button.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+        field.classList.toggle("is-visible", showPassword);
+
+        if (selectionStart !== null && selectionEnd !== null) {
+          passwordInput.setSelectionRange(selectionStart, selectionEnd);
+        }
+      }
+
+      document.querySelectorAll(".password-toggle").forEach((button) => {
+        button.addEventListener("click", () => togglePasswordVisibility(button));
+      });
+    })();
   </script>
 </body>
 </html>

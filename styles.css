@@ -495,6 +495,60 @@ input:focus {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 3.75rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #6B7280;
+  cursor: pointer;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: #2563EB;
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 1px;
+}
+
+.password-toggle-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.password-toggle-icon--eye-off,
+.password-field.is-visible .password-toggle-icon--eye {
+  display: none;
+}
+
+.password-field.is-visible .password-toggle-icon--eye-off {
+  display: block;
+}
+
 .auth-footer {
   margin: 1rem 0 0;
   color: var(--muted);
