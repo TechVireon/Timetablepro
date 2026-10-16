@@ -88,10 +88,17 @@ main {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
   font-family: 'Poppins', 'Inter', sans-serif;
   font-weight: 700;
   font-size: 1.15rem;
   color: var(--primary);
+}
+
+.brand-pro {
+  color: #FF3131;
+  font-family: inherit;
 }
 
 .top-nav {
