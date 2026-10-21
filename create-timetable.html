@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
   <title>Create Timetable | TimetablePro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -57,17 +58,35 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const BACKEND_URL = "https://timetablepro-backend-jxw6.onrender.com";
+
     const dayNames = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
+    function timingFromSettings(s) {
+      return {
+        startTime: s.start_time || "08:00",
+        periodLength: s.period_length || 40,
+        periodLengthAfter: s.period_length_after || s.period_length || 40,
+        breakEnabled: s.break_enabled !== false,
+        breakAfter: s.break_after || 4,
+        breakLength: s.break_length || 30
+      };
+    }
+
+    function timingToSnake(t) {
+      return {
+        start_time: t.startTime,
+        period_length: t.periodLength,
+        period_length_after: t.periodLengthAfter,
+        break_enabled: t.breakEnabled,
+        break_after: t.breakAfter,
+        break_length: t.breakLength
+      };
+    }
+
     window.savedLayoutPreference = "horizontal";
-    window.savedTiming = {
-      startTime: "08:00",
-      periodLength: 40,
-      periodLengthAfter: 40,
-      breakEnabled: true,
-      breakAfter: 4,
-      breakLength: 30
-    };
+    window.savedTiming = timingFromSettings({});
+    window.campusMode = false;
+    window.campuses = [];
 
     async function checkLogin() {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -78,16 +97,14 @@
 
       const meta = session.user.user_metadata || {};
       window.savedLayoutPreference = meta.timetable_layout || "horizontal";
-      window.savedTiming = {
-        startTime: meta.start_time || "08:00",
-        periodLength: meta.period_length || 40,
-        periodLengthAfter: meta.period_length_after || meta.period_length || 40,
-        breakEnabled: meta.break_enabled !== false,
-        breakAfter: meta.break_after || 4,
-        breakLength: meta.break_length || 30
-      };
+      window.savedTiming = timingFromSettings(meta);
+      window.campusMode = meta.campuses_enabled === true && Array.isArray(meta.campuses) && meta.campuses.length > 0;
+      window.campuses = window.campusMode ? meta.campuses : [];
     }
-    const loginReady = checkLogin();
+
+    const loginReady = checkLogin().then(function () {
+      document.querySelectorAll("#classesContainer > .class-box").forEach(updateCampusField);
+    });
 
     document.getElementById("logoutBtn").addEventListener("click", async function (e) {
       e.preventDefault();
@@ -98,6 +115,28 @@
     document.getElementById("sidebarToggle").addEventListener("click", function () {
       document.getElementById("sidebar").classList.toggle("open");
     });
+
+    function updateCampusField(div) {
+      const field = div.querySelector(".campus-field");
+      const select = div.querySelector(".campusSelect");
+      if (!field || !select) return;
+
+      if (!window.campusMode) {
+        field.style.display = "none";
+        return;
+      }
+
+      const current = select.value;
+      select.innerHTML = "";
+      window.campuses.forEach(function (c) {
+        const option = document.createElement("option");
+        option.value = c.name;
+        option.textContent = c.name;
+        select.appendChild(option);
+      });
+      if (current) select.value = current;
+      field.style.display = "";
+    }
 
     let classCount = 0;
 
@@ -112,11 +151,16 @@
           <span>Class name</span>
           <input type="text" class="className" placeholder="e.g. 9th A" />
         </label>
+        <label class="campus-field" style="display:none">
+          <span>Campus</span>
+          <select class="campusSelect"></select>
+        </label>
         <p class="subjects-label">Subjects</p>
         <div class="subjectsContainer"></div>
         <button type="button" class="button button-secondary addSubjectBtn">+ Add Subject</button>
       `;
       document.getElementById("classesContainer").appendChild(div);
+      updateCampusField(div);
 
       div.querySelector(".removeClassBtn").addEventListener("click", function () {
         if (confirm("Remove this class and all its subjects?")) div.remove();
@@ -168,6 +212,38 @@
       return classes;
     }
 
+    function collectCampusMap() {
+      const map = {};
+      document.querySelectorAll("#classesContainer > .card-panel").forEach(function (classDiv) {
+        const classNameValue = classDiv.querySelector(".className").value.trim();
+        if (!classNameValue) return;
+        const select = classDiv.querySelector(".campusSelect");
+        map[classNameValue] = (window.campusMode && select && select.value) ? select.value : null;
+      });
+      return map;
+    }
+
+    function findDuplicateClassName() {
+      const seen = {};
+      const inputs = document.querySelectorAll("#classesContainer .className");
+      for (let i = 0; i < inputs.length; i++) {
+        const n = inputs[i].value.trim().toLowerCase();
+        if (!n) continue;
+        if (seen[n]) return inputs[i].value.trim();
+        seen[n] = true;
+      }
+      return null;
+    }
+
+    function getTimingFor(name, campusMap) {
+      const campusName = campusMap ? campusMap[name] : null;
+      if (window.campusMode && campusName) {
+        const campus = window.campuses.find(function (c) { return c.name === campusName; });
+        if (campus) return timingFromSettings(campus);
+      }
+      return window.savedTiming;
+    }
+
     document.getElementById("generateBtn").addEventListener("click", async function () {
       await loginReady;
 
@@ -181,13 +257,27 @@
         return;
       }
 
+      const duplicate = findDuplicateClassName();
+      if (duplicate) {
+        resultArea.innerHTML = `<p style="color:red">Two classes have the same name: ${duplicate}. Please give each class a different name, for example "9th A Main" and "9th A City".</p>`;
+        return;
+      }
+
+      const campusMap = collectCampusMap();
+      const classTiming = {};
+      if (window.campusMode) {
+        Object.keys(classes).forEach(function (name) {
+          classTiming[name] = timingToSnake(getTimingFor(name, campusMap));
+        });
+      }
+
       resultArea.innerHTML = "<p>Generating timetable...</p>";
 
       try {
         const response = await fetch(`${BACKEND_URL}/generate-timetable`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes })
+          body: JSON.stringify({ days, periods_per_day: periodsPerDay, classes, class_timing: classTiming })
         });
 
         const data = await response.json();
@@ -197,26 +287,33 @@
           return;
         }
 
-        renderTimetables(data.timetable, days, periodsPerDay);
-        await saveTimetables(data.timetable, days, periodsPerDay);
+        renderTimetables(data.timetable, days, periodsPerDay, campusMap);
+        await saveTimetables(data.timetable, days, periodsPerDay, campusMap);
       } catch (err) {
         console.error("Generate failed:", err);
         resultArea.innerHTML = `<p style="color:red">Could not reach the server. It may be waking up, so please wait a minute and try again.</p>`;
       }
     });
 
-    async function saveTimetables(timetableData, days, periodsPerDay) {
+    async function saveTimetables(timetableData, days, periodsPerDay, campusMap) {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) return;
 
       for (const name in timetableData) {
-        const { error } = await supabaseClient.from("timetables").insert({
+        const campusName = window.campusMode ? campusMap[name] : null;
+        const row = {
           user_id: session.user.id,
           class_name: name,
           data: timetableData[name],
           days: days,
           periods_per_day: periodsPerDay
-        });
+        };
+        if (campusName) {
+          row.campus_name = campusName;
+          row.timing = timingToSnake(getTimingFor(name, campusMap));
+        }
+
+        const { error } = await supabaseClient.from("timetables").insert(row);
         if (error) console.log("SAVE ERROR:", error.message);
       }
     }
@@ -253,8 +350,7 @@
       return timeline;
     }
 
-    async function downloadPdf(name, schedule, days, periodsPerDay) {
-      const timing = window.savedTiming;
+    async function downloadPdf(name, schedule, days, periodsPerDay, timing, campusName) {
       try {
         const response = await fetch(`${BACKEND_URL}/download-saved-pdf/${encodeURIComponent(name)}`, {
           method: "POST",
@@ -269,7 +365,8 @@
             period_length_after: timing.periodLengthAfter,
             break_enabled: timing.breakEnabled,
             break_after: timing.breakAfter,
-            break_length: timing.breakLength
+            break_length: timing.breakLength,
+            campus_name: campusName || null
           })
         });
 
@@ -290,14 +387,34 @@
       }
     }
 
-    function renderTimetables(timetable, days, periodsPerDay) {
+    function renderTimetables(timetable, days, periodsPerDay, campusMap) {
       const layout = window.savedLayoutPreference || "horizontal";
-      const timing = window.savedTiming;
-      const timeline = getPeriodTimeline(timing, periodsPerDay);
       const resultArea = document.getElementById("resultArea");
       resultArea.innerHTML = "";
 
-      Object.keys(timetable).forEach(function (name) {
+      const names = Object.keys(timetable);
+      if (window.campusMode) {
+        const order = window.campuses.map(function (c) { return c.name; });
+        names.sort(function (a, b) {
+          return order.indexOf(campusMap[a]) - order.indexOf(campusMap[b]);
+        });
+      }
+
+      let lastCampus = null;
+
+      names.forEach(function (name) {
+        const campusName = window.campusMode ? campusMap[name] : null;
+        if (campusName && campusName !== lastCampus) {
+          const heading = document.createElement("h2");
+          heading.className = "campus-title";
+          heading.textContent = campusName;
+          resultArea.appendChild(heading);
+          lastCampus = campusName;
+        }
+
+        const timing = getTimingFor(name, campusMap);
+        const timeline = getPeriodTimeline(timing, periodsPerDay);
+
         const section = document.createElement("div");
         section.className = "card-panel";
         let html = `<h3>${name}</h3><table class="timetable-table">`;
@@ -351,7 +468,7 @@
         downloadBtn.className = "button button-primary";
         downloadBtn.textContent = "Download PDF";
         downloadBtn.addEventListener("click", function () {
-          downloadPdf(name, timetable[name], days, periodsPerDay);
+          downloadPdf(name, timetable[name], days, periodsPerDay, timing, campusName);
         });
         section.appendChild(downloadBtn);
 

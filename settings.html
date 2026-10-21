@@ -18,6 +18,24 @@
         <a href="create-timetable.html">Create Timetable</a>
         <a href="my-timetables.html">My Timetables</a>
         <a href="settings.html" class="active">Settings</a>
+              <div class="card-panel" id="campusesCard">
+        <h3>Campuses</h3>
+        <div class="campus-switch-row">
+          <div>
+            <strong>Multiple campuses</strong>
+            <p class="campus-hint">Turn this on if your school or college has more than one campus with different timings.</p>
+          </div>
+          <button type="button" id="campusToggle" class="campus-switch" role="switch" aria-checked="false" aria-label="Multiple campuses"></button>
+        </div>
+
+        <div id="campusArea" style="display:none">
+          <div id="campusList"></div>
+          <button type="button" class="button button-secondary" id="addCampusBtn">+ Add Campus</button>
+        </div>
+
+        <button type="button" class="button button-primary" id="saveCampusesBtn">Save Campuses</button>
+        <p id="campusSaveMsg" class="campus-msg"></p>
+      </div>
         <a href="#" id="logoutBtn">Logout</a>
       </nav>
     </aside>
@@ -243,5 +261,6 @@
 
     loadAccountInfo();
   </script>
+  <script src="campuses.js"></script>
 </body>
 </html>

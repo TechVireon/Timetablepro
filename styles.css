@@ -1397,3 +1397,111 @@ input:focus {
     width: 100%;
   }
 }
+/* Campuses */
+.campus-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 16px 0;
+}
+.campus-hint {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #6B7280;
+}
+.campus-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #D1D5DB;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.campus-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+.campus-switch[aria-checked="true"] {
+  background: #2563EB;
+}
+.campus-switch[aria-checked="true"]::after {
+  transform: translateX(22px);
+}
+.campus-box {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-left: 4px solid #2563EB;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+.campus-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.campus-head .campus-name {
+  flex: 1;
+  font-weight: 600;
+}
+.campus-remove {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #F3F4F6;
+  color: #6B7280;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.campus-remove:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+.campus-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.campus-break-options {
+  margin-top: 12px;
+  padding: 12px;
+  background: #EFF6FF;
+  border-left: 3px solid #2563EB;
+  border-radius: 8px;
+}
+.campus-msg {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #16A34A;
+}
+.campus-msg.error {
+  color: #DC2626;
+}
+@media (max-width: 600px) {
+  .campus-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.campus-title {
+  margin: 28px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #2563EB;
+  color: #1E3A8A;
+}
